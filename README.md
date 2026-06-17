@@ -6,11 +6,11 @@ Deep learning-based classification of retinal fundus images into **Normal** and 
 ## Models
 
 * ResNet-18 (Names of code files with '....py' format represents resent-18 files.)
-* EfficientNet-B0 (Names of code files with '...._2.py' format represents efficientnet-b0 files created later.)
+* EfficientNet-B0 (Names of code files with '...._2.py' format represents efficientnet-b0 files.)
 
 ## Dataset
 
-APTOS 2019 Blindness Detection Dataset
+APTOS 2019 Blindness Detection Dataset from Kaggle
 
 ## Technologies
 
