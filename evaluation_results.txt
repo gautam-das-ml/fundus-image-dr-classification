@@ -1,0 +1,21 @@
+Resnet-18
+
+Confusion Matrix:(test data)
+[[196   3]
+ [  2 165]]
+
+Accuracy: 0.9836
+Precision: 0.9820
+Recall: 0.9820
+F1 Score: 0.9820
+
+EfficientNet-B0
+
+Confusion Matrix:
+[[193   6]
+ [  1 166]]
+
+Accuracy: 0.9808
+Precision: 0.9651
+Recall: 0.9940
+F1 Score: 0.9793
