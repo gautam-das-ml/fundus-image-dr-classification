@@ -1,4 +1,4 @@
-# fundus-image-dr-classification
+# Fundus-Image-DR-Classification
 # Diabetic Retinopathy Classification
 
 Deep learning-based classification of retinal fundus images into **Normal** and **Diabetic Retinopathy** categories.
