@@ -5,8 +5,14 @@ Deep learning-based classification of retinal fundus images into **Normal** and 
 
 ## Models
 
-* ResNet-18 (Names of code files with '....py' format represents resent-18 files.)
-* EfficientNet-B0 (Names of code files with '...._2.py' format represents efficientnet-b0 files.)
+* ResNet-18 (pre-trained CNN that used residual blocks and skip connections, contains 11.7 million parameter, was fine tuned for diabetic retinopathy classification)
+* EfficientNet-B0 (pre-trained CNN that used compound scaling and MBConv blocks, contains 5.3 million parameter, was fine tuned for the same purpose)
+
+## Code Layout
+
+* Names of code files with '....py' format represents resent-18 files.
+* Names of code files with '...._2.py' format represents efficientnet-b0 files.
+* app.py and index.html represent the web interfaces files, not deployed, only locally hosted in flask.
 
 ## Dataset
 
