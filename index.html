@@ -1,0 +1,1550 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RetinaScope — DR Analysis Platform</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0d12;
+    --surface: #111520;
+    --surface2: #161c2b;
+    --border: rgba(99,130,255,0.12);
+    --border2: rgba(99,130,255,0.22);
+    --accent: #5b8aff;
+    --accent2: #8fb3ff;
+    --text: #e8edf8;
+    --text2: #8a9bc4;
+    --text3: #4a5a80;
+    --green: #22c55e;
+    --yellow: #f59e0b;
+    --orange: #f97316;
+    --red: #ef4444;
+    --red2: #dc2626;
+    --glow: 0 0 60px rgba(91,138,255,0.08);
+    --radius: 16px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Animated grid background */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(91,138,255,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(91,138,255,0.04) 1px, transparent 1px);
+    background-size: 48px 48px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  body::after {
+    content: '';
+    position: fixed;
+    top: -200px; left: 50%; transform: translateX(-50%);
+    width: 800px; height: 500px;
+    background: radial-gradient(ellipse, rgba(91,138,255,0.07) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* NAV */
+  nav {
+    position: sticky; top: 0; z-index: 100;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 40px;
+    height: 64px;
+    background: rgba(10,13,18,0.85);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .nav-logo {
+    display: flex; align-items: center; gap: 10px;
+  }
+
+  .nav-logo-icon {
+    width: 32px; height: 32px;
+    background: linear-gradient(135deg, var(--accent) 0%, #a78bfa 100%);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px;
+  }
+
+  .nav-logo span {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.25rem;
+    letter-spacing: -0.02em;
+  }
+
+  .nav-logo .dot { color: var(--accent); }
+
+  .nav-badge {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem;
+    color: var(--accent);
+    background: rgba(91,138,255,0.1);
+    border: 1px solid rgba(91,138,255,0.25);
+    padding: 3px 8px;
+    border-radius: 100px;
+    letter-spacing: 0.08em;
+  }
+
+  .nav-status {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 0.8rem;
+    color: var(--text2);
+  }
+
+  .status-dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--green);
+    box-shadow: 0 0 8px var(--green);
+    animation: pulse-dot 2s infinite;
+  }
+
+  @keyframes pulse-dot {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+
+  /* MAIN LAYOUT */
+  main {
+    position: relative; z-index: 1;
+    max-width: 1160px;
+    margin: 0 auto;
+    padding: 60px 24px 100px;
+  }
+
+  /* HERO */
+  .hero {
+    text-align: center;
+    margin-bottom: 64px;
+    animation: fadeUp 0.7s ease both;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(24px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .hero-eyebrow {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--accent);
+    background: rgba(91,138,255,0.08);
+    border: 1px solid rgba(91,138,255,0.2);
+    padding: 6px 14px;
+    border-radius: 100px;
+    margin-bottom: 24px;
+  }
+
+  .hero h1 {
+    font-family: 'DM Serif Display', serif;
+    font-size: clamp(2.4rem, 5vw, 3.8rem);
+    line-height: 1.1;
+    letter-spacing: -0.03em;
+    margin-bottom: 20px;
+  }
+
+  .hero h1 em {
+    font-style: italic;
+    background: linear-gradient(135deg, var(--accent) 0%, #a78bfa 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .hero p {
+    font-size: 1.05rem;
+    color: var(--text2);
+    max-width: 560px;
+    margin: 0 auto;
+    line-height: 1.7;
+  }
+
+  /* UPLOAD ZONE */
+  .upload-zone {
+    background: var(--surface);
+    border: 2px dashed var(--border2);
+    border-radius: 20px;
+    padding: 56px 32px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+    animation: fadeUp 0.7s 0.15s ease both;
+  }
+
+  .upload-zone:hover, .upload-zone.drag-over {
+    border-color: var(--accent);
+    background: rgba(91,138,255,0.05);
+    transform: translateY(-2px);
+    box-shadow: 0 20px 60px rgba(91,138,255,0.1);
+  }
+
+  .upload-zone::before {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    background: linear-gradient(135deg, rgba(91,138,255,0.15), transparent, rgba(167,139,250,0.1));
+    border-radius: 22px;
+    opacity: 0;
+    transition: opacity 0.3s;
+    z-index: 0;
+  }
+
+  .upload-zone:hover::before { opacity: 1; }
+
+  .upload-icon {
+    width: 72px; height: 72px;
+    margin: 0 auto 20px;
+    background: linear-gradient(135deg, rgba(91,138,255,0.15), rgba(167,139,250,0.1));
+    border: 1px solid rgba(91,138,255,0.25);
+    border-radius: 20px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 2rem;
+    position: relative; z-index: 1;
+  }
+
+  .upload-zone h3 {
+    font-size: 1.15rem;
+    font-weight: 600;
+    margin-bottom: 8px;
+    position: relative; z-index: 1;
+  }
+
+  .upload-zone p {
+    color: var(--text2);
+    font-size: 0.9rem;
+    position: relative; z-index: 1;
+  }
+
+  .upload-zone p span {
+    color: var(--accent);
+    font-weight: 500;
+  }
+
+  .file-types {
+    display: flex; justify-content: center; gap: 8px; margin-top: 20px;
+    position: relative; z-index: 1;
+  }
+
+  .file-tag {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem;
+    color: var(--text3);
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    padding: 4px 10px;
+    border-radius: 6px;
+    letter-spacing: 0.05em;
+  }
+
+  /* ANALYZE BUTTON */
+  .btn-analyze {
+    width: 100%;
+    margin-top: 20px;
+    padding: 16px;
+    background: linear-gradient(135deg, var(--accent) 0%, #7c6ef5 100%);
+    color: white;
+    border: none;
+    border-radius: var(--radius);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 1rem;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    cursor: pointer;
+    transition: all 0.25s;
+    position: relative;
+    overflow: hidden;
+    display: none;
+  }
+
+  .btn-analyze.visible { display: flex; align-items: center; justify-content: center; gap: 8px; }
+
+  .btn-analyze:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 32px rgba(91,138,255,0.35);
+  }
+
+  .btn-analyze:active { transform: translateY(0); }
+
+  .btn-analyze.loading {
+    pointer-events: none;
+    opacity: 0.8;
+  }
+
+  .spinner {
+    width: 18px; height: 18px;
+    border: 2px solid rgba(255,255,255,0.3);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    display: none;
+  }
+
+  .spinner.active { display: block; }
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+
+  /* MULTI-FILE PREVIEW GRID */
+  #preview-area {
+    display: none;
+    margin-top: 20px;
+    flex-direction: column;
+    gap: 12px;
+    animation: fadeUp 0.4s ease both;
+  }
+
+  #preview-area.show { display: flex; }
+
+  .preview-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 16px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+  }
+
+  .preview-header-left {
+    display: flex; align-items: center; gap: 10px;
+  }
+
+  .preview-count-badge {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--accent);
+    background: rgba(91,138,255,0.1);
+    border: 1px solid rgba(91,138,255,0.25);
+    padding: 3px 10px;
+    border-radius: 100px;
+  }
+
+  .preview-header-title {
+    font-size: 0.88rem;
+    font-weight: 500;
+    color: var(--text2);
+  }
+
+  .preview-clear-all {
+    background: none; border: none;
+    color: var(--text3); cursor: pointer;
+    font-size: 0.8rem;
+    font-family: 'DM Sans', sans-serif;
+    padding: 5px 10px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    transition: all 0.2s;
+  }
+  .preview-clear-all:hover { color: var(--red); border-color: rgba(239,68,68,0.3); }
+
+  .preview-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 10px;
+  }
+
+  .preview-item {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 10px;
+    display: flex; flex-direction: column; align-items: center; gap: 8px;
+    position: relative;
+    transition: border-color 0.2s;
+  }
+
+  .preview-item:hover { border-color: var(--border2); }
+
+  .preview-item img {
+    width: 100%; aspect-ratio: 1;
+    object-fit: cover;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+  }
+
+  .preview-item-name {
+    font-size: 0.72rem;
+    color: var(--text2);
+    text-align: center;
+    word-break: break-all;
+    width: 100%;
+  }
+
+  .preview-item-size {
+    font-size: 0.65rem;
+    color: var(--text3);
+    font-family: 'DM Mono', monospace;
+  }
+
+  .preview-item-remove {
+    position: absolute; top: 6px; right: 6px;
+    background: rgba(10,13,18,0.7);
+    border: none;
+    color: var(--text3);
+    cursor: pointer;
+    font-size: 0.75rem;
+    width: 20px; height: 20px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.2s;
+  }
+  .preview-item-remove:hover { background: var(--red); color: white; }
+
+  /* STATUS INDICATOR PER ITEM */
+  .preview-item-status {
+    width: 100%;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.62rem;
+    text-align: center;
+    padding: 3px 6px;
+    border-radius: 6px;
+    letter-spacing: 0.06em;
+  }
+
+  .preview-item-status.pending { color: var(--text3); background: var(--surface); }
+  .preview-item-status.analyzing { color: var(--yellow); background: rgba(245,158,11,0.08); }
+  .preview-item-status.done-ok { color: var(--green); background: rgba(34,197,94,0.08); }
+  .preview-item-status.done-dr { color: var(--red); background: rgba(239,68,68,0.08); }
+
+  /* RESULTS PANEL */
+  #results {
+    display: none;
+    animation: fadeUp 0.6s ease both;
+  }
+
+  #results.show { display: block; }
+
+  .results-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-top: 40px;
+  }
+
+  @media (max-width: 768px) {
+    .results-grid { grid-template-columns: 1fr; }
+  }
+
+  .result-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 28px;
+    transition: border-color 0.3s;
+  }
+
+  .result-card.primary {
+    grid-column: 1 / -1;
+    background: linear-gradient(135deg, var(--surface) 0%, var(--surface2) 100%);
+  }
+
+  .card-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text3);
+    margin-bottom: 16px;
+  }
+
+  /* GRADE DISPLAY */
+  .grade-display {
+    display: flex; align-items: flex-start; gap: 24px;
+  }
+
+  .grade-badge {
+    min-width: 90px; height: 90px;
+    border-radius: 18px;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    font-size: 2rem;
+    flex-shrink: 0;
+    border: 2px solid;
+    transition: all 0.5s;
+  }
+
+  .grade-badge .grade-num {
+    font-family: 'DM Serif Display', serif;
+    font-size: 2.4rem;
+    line-height: 1;
+  }
+
+  .grade-badge .grade-txt {
+    font-size: 0.55rem;
+    font-family: 'DM Mono', monospace;
+    letter-spacing: 0.1em;
+    opacity: 0.8;
+    margin-top: 2px;
+  }
+
+  .grade-info h2 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.6rem;
+    letter-spacing: -0.02em;
+    margin-bottom: 4px;
+  }
+
+  .grade-severity {
+    font-size: 0.8rem;
+    font-family: 'DM Mono', monospace;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    opacity: 0.8;
+    margin-bottom: 10px;
+  }
+
+  .grade-desc {
+    color: var(--text2);
+    font-size: 0.9rem;
+    line-height: 1.6;
+  }
+
+  /* PROBABILITY BAR */
+  .prob-section { margin-top: 24px; }
+
+  .prob-row {
+    display: flex; justify-content: space-between;
+    align-items: center; margin-bottom: 8px;
+  }
+
+  .prob-label { font-size: 0.85rem; color: var(--text2); }
+  .prob-value {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.9rem;
+    font-weight: 500;
+  }
+
+  .prob-bar-bg {
+    height: 8px;
+    background: var(--surface2);
+    border-radius: 100px;
+    overflow: hidden;
+    margin-bottom: 16px;
+  }
+
+  .prob-bar-fill {
+    height: 100%;
+    border-radius: 100px;
+    transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
+    width: 0%;
+  }
+
+  /* RECOMMENDATION */
+  .rec-box {
+    display: flex; align-items: flex-start; gap: 12px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px;
+    margin-top: 4px;
+  }
+
+  .rec-icon {
+    width: 32px; height: 32px;
+    border-radius: 8px;
+    background: rgba(91,138,255,0.1);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.9rem;
+    flex-shrink: 0;
+  }
+
+  .rec-text {
+    font-size: 0.88rem;
+    line-height: 1.6;
+    color: var(--text2);
+  }
+
+  /* DISCLAIMER */
+  .disclaimer {
+    margin-top: 32px;
+    padding: 16px 20px;
+    background: rgba(91,138,255,0.05);
+    border: 1px solid rgba(91,138,255,0.12);
+    border-radius: 12px;
+    font-size: 0.8rem;
+    color: var(--text3);
+    line-height: 1.6;
+    text-align: center;
+  }
+
+  .disclaimer strong { color: var(--text2); }
+
+  /* DEMO BADGE */
+  .demo-notice {
+    display: flex; align-items: center; gap: 8px;
+    padding: 10px 16px;
+    background: rgba(245,158,11,0.08);
+    border: 1px solid rgba(245,158,11,0.2);
+    border-radius: 10px;
+    font-size: 0.8rem;
+    color: #f59e0b;
+    margin-bottom: 20px;
+  }
+
+  /* STATS ROW */
+  .stats-row {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: 16px; margin-bottom: 40px;
+    animation: fadeUp 0.7s 0.3s ease both;
+  }
+
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px 22px;
+    text-align: center;
+  }
+
+  .stat-val {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.8rem;
+    letter-spacing: -0.02em;
+    color: var(--accent2);
+    margin-bottom: 4px;
+  }
+
+  .stat-label {
+    font-size: 0.78rem;
+    color: var(--text3);
+    line-height: 1.4;
+  }
+
+  /* ERROR */
+  .error-box {
+    padding: 16px 20px;
+    background: rgba(239,68,68,0.08);
+    border: 1px solid rgba(239,68,68,0.25);
+    border-radius: 12px;
+    color: #fca5a5;
+    font-size: 0.9rem;
+    margin-top: 16px;
+    display: none;
+  }
+  .error-box.show { display: block; }
+
+  /* Hidden file input */
+  #file-input { display: none; }
+
+  /* ── BATCH RESULTS ── */
+  #batch-results {
+    display: none;
+    margin-top: 40px;
+    animation: fadeUp 0.6s ease both;
+  }
+  #batch-results.show { display: block; }
+
+  .batch-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 20px;
+  }
+
+  .batch-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.4rem;
+    letter-spacing: -0.02em;
+  }
+
+  .batch-summary {
+    display: flex; gap: 10px;
+  }
+
+  .batch-pill {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.7rem;
+    padding: 4px 12px;
+    border-radius: 100px;
+    letter-spacing: 0.06em;
+  }
+
+  .batch-pill.dr { background: rgba(239,68,68,0.12); color: var(--red); border: 1px solid rgba(239,68,68,0.25); }
+  .batch-pill.ok { background: rgba(34,197,94,0.1); color: var(--green); border: 1px solid rgba(34,197,94,0.2); }
+
+  .batch-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    gap: 20px;
+  }
+
+  /* Individual result card */
+  .img-result-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 22px;
+    animation: fadeUp 0.4s ease both;
+    transition: border-color 0.3s;
+  }
+
+  .img-result-card.is-dr { border-color: rgba(239,68,68,0.3); }
+  .img-result-card.is-ok { border-color: rgba(34,197,94,0.2); }
+
+  .img-result-top {
+    display: flex; align-items: center; gap: 14px;
+    margin-bottom: 16px;
+  }
+
+  .img-result-thumb {
+    width: 60px; height: 60px;
+    object-fit: cover;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+
+  .img-result-meta { flex: 1; min-width: 0; }
+
+  .img-result-filename {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-bottom: 4px;
+  }
+
+  .img-result-badge {
+    display: inline-flex; align-items: center; gap: 5px;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.68rem;
+    padding: 3px 10px;
+    border-radius: 100px;
+    letter-spacing: 0.07em;
+  }
+
+  .img-result-badge.dr { background: rgba(239,68,68,0.12); color: var(--red); border: 1px solid rgba(239,68,68,0.25); }
+  .img-result-badge.ok { background: rgba(34,197,94,0.1); color: var(--green); border: 1px solid rgba(34,197,94,0.2); }
+
+  .img-result-num {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.1rem;
+    color: var(--text3);
+  }
+
+  .img-prob-section {display: flex; justify-content: space-between;
+    align-items: center; margin-bottom: 5px; }
+
+  .img-prob-row {
+    display: flex; justify-content: space-between;
+    align-items: center; margin-bottom: 5px;
+  }
+
+  .img-prob-label { font-size: 0.78rem; color: var(--text2); }
+  .img-prob-value {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.8rem;
+    font-weight: 500;
+  }
+
+  .img-prob-bar-bg {
+    height: 6px;
+    background: var(--surface2);
+    border-radius: 100px;
+    overflow: hidden;
+    margin-bottom: 12px;
+  }
+
+  .img-prob-bar-fill {
+    height: 100%;
+    border-radius: 100px;
+    transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
+    width: 0%;
+  }
+
+  .img-rec-box {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 14px;
+    margin-top: 10px;
+    font-size: 0.78rem;
+    color: var(--text2);
+    line-height: 1.55;
+  }
+
+  /* Single-image results (original layout kept for single file) */
+  #single-results {
+    display: none;
+    animation: fadeUp 0.6s ease both;
+  }
+  #single-results.show { display: block; }
+
+  /* ── ALGORITHM PICKER ── */
+
+  .algo-pick-btn {
+    display: flex; align-items: center; gap: 8px;
+    width: 100%;
+    margin-top: 10px;
+    padding: 10px 14px;
+    background: var(--surface2);
+    border: 1px solid var(--border2);
+    border-radius: 12px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.92rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .algo-pick-btn:hover {
+    border-color: var(--accent);
+    background: rgba(91,138,255,0.08);
+  }
+  .algo-pick-btn.open {
+    border-color: var(--accent);
+    background: rgba(91,138,255,0.1);
+  }
+  .algo-pick-chevron {
+    margin-left: auto;
+    font-size: 0.8rem;
+    color: var(--text3);
+    transition: transform 0.25s;
+  }
+  .algo-pick-chevron.open { transform: rotate(180deg); }
+
+  /* Dropdown panel — fixed so it floats above everything */
+  .algo-dropdown {
+    display: none;
+    position: fixed;
+    z-index: 9999;
+    background: rgba(17, 21, 32, 0.55);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(99,130,255,0.2);
+    border-radius: 16px;
+    padding: 14px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.4), 0 0 0 1px rgba(91,138,255,0.08);
+    animation: dropIn 0.2s ease;
+    width: 320px;
+  }
+  .algo-dropdown.show { display: block; }
+
+  @keyframes dropIn {
+    from { opacity: 0; transform: translateY(-8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .algo-dropdown-title {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.62rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text3);
+    margin-bottom: 10px;
+    padding: 0 4px;
+  }
+
+  .algo-card {
+    display: flex; align-items: flex-start; gap: 12px;
+    padding: 12px;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    background: rgba(22, 28, 43, 0.6);
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-bottom: 8px;
+  }
+  .algo-card:last-child { margin-bottom: 0; }
+  .algo-card:hover {
+    border-color: var(--border2);
+    background: rgba(91,138,255,0.08);
+  }
+  .algo-card.selected {
+    border-color: var(--accent);
+    background: rgba(91,138,255,0.12);
+  }
+
+  .algo-card-icon { font-size: 1.4rem; flex-shrink: 0; margin-top: 2px; }
+
+  .algo-card-body { flex: 1; min-width: 0; }
+  .algo-card-name {
+    font-weight: 700;
+    font-size: 0.9rem;
+    margin-bottom: 4px;
+    color: var(--text);
+  }
+  .algo-card-desc {
+    font-size: 0.75rem;
+    color: var(--text2);
+    line-height: 1.5;
+    margin-bottom: 8px;
+  }
+  .algo-card-tags { display: flex; gap: 5px; flex-wrap: wrap; }
+  .algo-tag {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.6rem;
+    letter-spacing: 0.05em;
+    color: var(--text3);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 2px 8px;
+    border-radius: 100px;
+  }
+  .algo-card.selected .algo-tag {
+    color: var(--accent);
+    border-color: rgba(91,138,255,0.3);
+    background: rgba(91,138,255,0.08);
+  }
+
+  .algo-card-check {
+    font-size: 0.85rem;
+    color: var(--accent);
+    font-weight: 700;
+    flex-shrink: 0;
+    margin-top: 2px;
+    transition: opacity 0.2s;
+  }
+  @media (max-width: 640px) {
+    nav { padding: 0 20px; }
+    main { padding: 40px 16px 80px; }
+    .stats-row { grid-template-columns: 1fr; }
+    .grade-display { flex-direction: column; }
+    .batch-grid { grid-template-columns: 1fr; }
+    .preview-grid { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-logo">
+    <div class="nav-logo-icon">👁</div>
+    <span>Retina<span class="dot">Scope</span></span>
+    <div class="nav-badge">AI-POWERED</div>
+  </div>
+  <div class="nav-status">
+    <div class="status-dot"></div>
+    <span id="nav-status-text">System Ready</span>
+  </div>
+</nav>
+
+<main>
+  <div class="hero">
+    <div class="hero-eyebrow">
+      <span>🔬</span>
+      Diabetic Retinopathy Detection
+    </div>
+    <h1>Analyze Retinal Images<br>with <em>Deep Learning</em></h1>
+    <p>Upload up to 10 fundus images to detect signs of diabetic retinopathy using our AI-based screening system.</p>
+  </div>
+
+  <div class="stats-row">
+    <!-- Algorithm selector block -->
+    <div class="stat-card algo-picker-card">
+      <div class="stat-label">Algorithm</div>
+      <button class="algo-pick-btn" id="algo-pick-btn" onclick="toggleAlgoDropdown(event)">
+        <span id="algo-pick-icon">🧠</span>
+        <span id="algo-pick-name">ResNet-18</span>
+        <span class="algo-pick-chevron" id="algo-pick-chevron">▾</span>
+      </button>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-val">Binary</div>
+      <div class="stat-label">DR Detection</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-val">&lt;2s</div>
+      <div class="stat-label">Analysis Time</div>
+    </div>
+  </div>
+
+  <!-- Upload Section -->
+  <div id="demo-notice" class="demo-notice" style="display:none;">
+    ⚠ Running in demo mode — no trained model weights found. Predictions are simulated for UI demonstration.
+  </div>
+
+  <div id="upload-zone" class="upload-zone" onclick="document.getElementById('file-input').click()">
+    <div class="upload-icon">🫀</div>
+    <h3>Drop fundus images here</h3>
+    <p>or <span>click to browse</span> — up to <span>10 images</span> at once</p>
+    <div class="file-types">
+      <span class="file-tag">PNG</span>
+      <span class="file-tag">JPG</span>
+      <span class="file-tag">JPEG</span>
+      <span class="file-tag">BMP</span>
+      <span class="file-tag">TIFF</span>
+    </div>
+  </div>
+
+  <input type="file" id="file-input" accept=".png,.jpg,.jpeg,.bmp,.tiff" multiple>
+
+  <!-- Multi-file preview grid -->
+  <div id="preview-area">
+    <div class="preview-header">
+      <div class="preview-header-left">
+        <span class="preview-count-badge" id="preview-count-badge">0 / 10</span>
+        <span class="preview-header-title">Selected Images</span>
+      </div>
+      <button class="preview-clear-all" onclick="clearAllFiles()">✕ Clear All</button>
+    </div>
+    <div class="preview-grid" id="preview-grid"></div>
+  </div>
+
+  <div id="error-box" class="error-box"></div>
+
+  <button id="btn-analyze" class="btn-analyze" onclick="analyzeImages()">
+    <div id="btn-spinner" class="spinner"></div>
+    <span id="btn-text">🔬 Analyze Retinal Images</span>
+  </button>
+
+  <!-- SINGLE image result (original layout, used when only 1 image) -->
+  <div id="single-results">
+    <div class="results-grid">
+      <div class="result-card primary" id="grade-card">
+        <div class="card-label">Diagnosis Result</div>
+        <div class="grade-display">
+          <div class="grade-badge" id="grade-badge">
+            <div class="grade-num" id="grade-num">—</div>
+            <div class="grade-txt"></div>
+          </div>
+          <div class="grade-info">
+            <h2 id="grade-name">—</h2>
+            <div class="grade-severity" id="grade-severity">—</div>
+            <div class="grade-desc" id="grade-desc">—</div>
+          </div>
+        </div>
+
+        <div class="prob-section">
+          <div class="prob-row">
+            <span class="prob-label">DR Probability</span>
+            <span class="prob-value" id="dr-prob-val">—</span>
+          </div>
+          <div class="prob-bar-bg">
+            <div class="prob-bar-fill" id="dr-prob-bar" style="background: linear-gradient(90deg, var(--accent), #a78bfa);"></div>
+          </div>
+          <div class="prob-row">
+            <span class="prob-label">No DR Probability</span>
+            <span class="prob-value" id="nodr-prob-val">—</span>
+          </div>
+          <div class="prob-bar-bg">
+            <div class="prob-bar-fill" id="nodr-prob-bar" style="background: linear-gradient(90deg, var(--green), #34d399);"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="result-card" style="grid-column: 1 / -1;">
+        <div class="card-label">Clinical Recommendation</div>
+        <div class="rec-box" id="rec-box">
+          <div class="rec-icon">📋</div>
+          <div class="rec-text" id="rec-text">—</div>
+        </div>
+        <div class="disclaimer" style="margin-top: 20px;">
+          <strong>⚕ Medical Disclaimer:</strong> This tool is intended for <strong>screening assistance only</strong> and does not replace professional ophthalmological examination. All results must be reviewed and confirmed by a qualified medical professional before any clinical decision is made.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BATCH results (for 2–10 images) -->
+  <div id="batch-results">
+    <div class="batch-header">
+      <div class="batch-title">Batch Analysis Results</div>
+      <div class="batch-summary">
+        <span class="batch-pill dr" id="batch-dr-pill">0 DR</span>
+        <span class="batch-pill ok" id="batch-ok-pill">0 Normal</span>
+      </div>
+    </div>
+    <div class="batch-grid" id="batch-grid"></div>
+    <div class="disclaimer" style="margin-top: 28px;">
+      <strong>⚕ Medical Disclaimer:</strong> This tool is intended for <strong>screening assistance only</strong> and does not replace professional ophthalmological examination. All results must be reviewed and confirmed by a qualified medical professional before any clinical decision is made.
+    </div>
+  </div>
+
+</main>
+
+<script>
+  const MAX_FILES = 10;
+  let currentFiles = []; // Array of File objects
+  let selectedModel = 'resnet18';
+
+  function toggleAlgoDropdown(e) {
+    e.stopPropagation();
+    const dd   = document.getElementById('algo-dropdown');
+    const btn  = document.getElementById('algo-pick-btn');
+    const chev = document.getElementById('algo-pick-chevron');
+    const isOpen = dd.classList.contains('show');
+
+    if (isOpen) {
+      dd.classList.remove('show');
+      btn.classList.remove('open');
+      chev.classList.remove('open');
+      return;
+    }
+
+    // Position fixed dropdown directly below the button
+    const rect = btn.getBoundingClientRect();
+    const ddWidth = 320;
+    let left = rect.left;
+    // Keep within viewport
+    if (left + ddWidth > window.innerWidth - 12) {
+      left = window.innerWidth - ddWidth - 12;
+    }
+    dd.style.top  = (rect.bottom + 8) + 'px';
+    dd.style.left = Math.max(12, left) + 'px';
+
+    dd.classList.add('show');
+    btn.classList.add('open');
+    chev.classList.add('open');
+  }
+
+  function selectAlgo(arch) {
+    selectedModel = arch;
+    const labels = { resnet18: 'ResNet-18', efficientnet_b0: 'EfficientNet-B0' };
+    const icons  = { resnet18: '🧠', efficientnet_b0: '⚡' };
+
+    // Update button label
+    document.getElementById('algo-pick-name').textContent = labels[arch];
+    document.getElementById('algo-pick-icon').textContent = icons[arch];
+
+    // Update cards
+    ['resnet18', 'efficientnet_b0'].forEach(a => {
+      document.getElementById('algocard-' + a).classList.toggle('selected', a === arch);
+      document.getElementById('check-' + a).style.opacity = a === arch ? '1' : '0';
+    });
+
+    // Close dropdown
+    document.getElementById('algo-dropdown').classList.remove('show');
+    document.getElementById('algo-pick-btn').classList.remove('open');
+    document.getElementById('algo-pick-chevron').classList.remove('open');
+  }
+
+  // Init first card as selected
+  document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('algocard-resnet18').classList.add('selected');
+  });
+
+  // Close dropdown on outside click
+  document.addEventListener('click', () => {
+    document.getElementById('algo-dropdown').classList.remove('show');
+    document.getElementById('algo-pick-btn').classList.remove('open');
+    document.getElementById('algo-pick-chevron').classList.remove('open');
+  });
+
+  // Check model status
+  fetch('/api/health').then(r => r.json()).then(data => {
+    // Support both old and new health response shapes
+    const models = data.models || {};
+    const anyLoaded = data.model_loaded || Object.values(models).some(v => v);
+    if (!anyLoaded) {
+      document.getElementById('demo-notice').style.display = 'flex';
+      document.getElementById('nav-status-text').textContent = 'Demo Mode';
+    }
+  }).catch(() => {});
+
+  // Upload zone drag & drop
+  const zone = document.getElementById('upload-zone');
+  zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('drag-over'); });
+  zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
+  zone.addEventListener('drop', e => {
+    e.preventDefault();
+    zone.classList.remove('drag-over');
+    handleFiles(Array.from(e.dataTransfer.files));
+  });
+
+  document.getElementById('file-input').addEventListener('change', e => {
+    if (e.target.files.length) handleFiles(Array.from(e.target.files));
+    e.target.value = ''; // reset so same file can be re-added
+  });
+
+  function handleFiles(newFiles) {
+    const allowed = ['image/png','image/jpeg','image/bmp','image/tiff'];
+    const validFiles = newFiles.filter(f =>
+      allowed.includes(f.type) || f.name.match(/\.(png|jpg|jpeg|bmp|tiff)$/i)
+    );
+
+    if (validFiles.length !== newFiles.length) {
+      showError('Some files were skipped — only PNG, JPG, JPEG, BMP, TIFF are supported.');
+    } else {
+      hideError();
+    }
+
+    // Merge, cap at MAX_FILES
+    const remaining = MAX_FILES - currentFiles.length;
+    if (remaining <= 0) {
+      showError(`Maximum ${MAX_FILES} images allowed. Remove some to add more.`);
+      return;
+    }
+
+    const toAdd = validFiles.slice(0, remaining);
+    if (validFiles.length > remaining) {
+      showError(`Only ${remaining} more image(s) can be added (max ${MAX_FILES} total). ${validFiles.length - remaining} file(s) skipped.`);
+    }
+
+    currentFiles = [...currentFiles, ...toAdd];
+    renderPreview();
+  }
+
+  function renderPreview() {
+    const grid = document.getElementById('preview-grid');
+    const area = document.getElementById('preview-area');
+    const btn  = document.getElementById('btn-analyze');
+
+    if (currentFiles.length === 0) {
+      area.classList.remove('show');
+      btn.classList.remove('visible');
+      hideBatchResults();
+      hideSingleResults();
+      return;
+    }
+
+    document.getElementById('preview-count-badge').textContent = `${currentFiles.length} / ${MAX_FILES}`;
+    area.classList.add('show');
+    btn.classList.add('visible');
+    grid.innerHTML = '';
+    currentFiles.forEach((file, idx) => {
+      const item = document.createElement('div');
+      item.className = 'preview-item';
+      item.id = `preview-item-${idx}`;
+
+      const img = document.createElement('img');
+      img.alt = file.name;
+      const reader = new FileReader();
+      reader.onload = e => { img.src = e.target.result; };
+      reader.readAsDataURL(file);
+
+      const name = document.createElement('div');
+      name.className = 'preview-item-name';
+      name.textContent = file.name.length > 20 ? file.name.slice(0, 18) + '…' : file.name;
+
+      const size = document.createElement('div');
+      size.className = 'preview-item-size';
+      size.textContent = formatSize(file.size);
+
+      const status = document.createElement('div');
+      status.className = 'preview-item-status pending';
+      status.id = `item-status-${idx}`;
+      status.textContent = 'PENDING';
+
+      const removeBtn = document.createElement('button');
+      removeBtn.className = 'preview-item-remove';
+      removeBtn.textContent = '✕';
+      removeBtn.title = 'Remove';
+      removeBtn.onclick = (e) => { e.stopPropagation(); removeFile(idx); };
+
+      item.appendChild(removeBtn);
+      item.appendChild(img);
+      item.appendChild(name);
+      item.appendChild(size);
+      item.appendChild(status);
+      grid.appendChild(item);
+    });
+  }
+
+  function removeFile(idx) {
+    currentFiles.splice(idx, 1);
+    renderPreview();
+    hideBatchResults();
+    hideSingleResults();
+    hideError();
+  }
+
+  function clearAllFiles() {
+    currentFiles = [];
+    renderPreview();
+    hideBatchResults();
+    hideSingleResults();
+    hideError();
+  }
+
+  function formatSize(bytes) {
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1024*1024) return (bytes/1024).toFixed(1) + ' KB';
+    return (bytes/(1024*1024)).toFixed(1) + ' MB';
+  }
+
+  async function analyzeImages() {
+    if (currentFiles.length === 0) return;
+
+    const btn = document.getElementById('btn-analyze');
+    const spinner = document.getElementById('btn-spinner');
+    const btnText = document.getElementById('btn-text');
+
+    btn.classList.add('loading');
+    spinner.classList.add('active');
+    btnText.textContent = `Analyzing ${currentFiles.length} image(s)…`;
+    hideError();
+    hideBatchResults();
+    hideSingleResults();
+
+    // Reset all status badges
+    currentFiles.forEach((_, idx) => {
+      const s = document.getElementById(`item-status-${idx}`);
+      if (s) { s.className = 'preview-item-status pending'; s.textContent = 'PENDING'; }
+    });
+
+    try {
+      if (currentFiles.length === 1) {
+        // Single-file flow → original result panel
+        const s = document.getElementById('item-status-0');
+        if (s) { s.className = 'preview-item-status analyzing'; s.textContent = 'ANALYZING…'; }
+
+        const formData = new FormData();
+        formData.append('image', currentFiles[0]);
+        formData.append('model', selectedModel);
+        const res = await fetch('/api/analyze', { method: 'POST', body: formData });
+        const data = await res.json();
+
+        if (!data.success) { showError(data.error || 'Analysis failed.'); return; }
+
+        const isDR = data.prediction === 'Diabetic Retinopathy';
+        if (s) {
+          s.className = isDR ? 'preview-item-status done-dr' : 'preview-item-status done-ok';
+          s.textContent = isDR ? 'DR DETECTED' : 'NORMAL';
+        }
+        renderSingleResult(data, currentFiles[0].name);
+
+      } else {
+        // Batch flow — sequential requests
+        const results = [];
+        for (let idx = 0; idx < currentFiles.length; idx++) {
+          const s = document.getElementById(`item-status-${idx}`);
+          if (s) { s.className = 'preview-item-status analyzing'; s.textContent = 'ANALYZING…'; }
+          btnText.textContent = `Analyzing ${idx + 1} / ${currentFiles.length}…`;
+
+          try {
+            const formData = new FormData();
+            formData.append('image', currentFiles[idx]);
+            formData.append('model', selectedModel);
+            const res = await fetch('/api/analyze', { method: 'POST', body: formData });
+            const data = await res.json();
+
+            const isDR = data.success && data.prediction === 'Diabetic Retinopathy';
+            if (s) {
+              s.className = isDR ? 'preview-item-status done-dr' : 'preview-item-status done-ok';
+              s.textContent = isDR ? 'DR DETECTED' : 'NORMAL';
+            }
+            results.push({ file: currentFiles[idx], data, idx });
+          } catch (err) {
+            if (s) { s.className = 'preview-item-status pending'; s.textContent = 'ERROR'; }
+            results.push({ file: currentFiles[idx], data: { success: false, error: err.message }, idx });
+          }
+        }
+        renderBatchResults(results);
+      }
+
+    } catch (err) {
+      showError('Network error: ' + err.message);
+    } finally {
+      btn.classList.remove('loading');
+      spinner.classList.remove('active');
+      btnText.textContent = '🔬 Analyze Retinal Images';
+    }
+  }
+
+  /* ── SINGLE RESULT RENDER (original layout) ── */
+  function renderSingleResult(r, filename) {
+    const isDR = r.prediction === 'Diabetic Retinopathy';
+    const color = isDR ? '#ef4444' : '#22c55e';
+
+    const badge = document.getElementById('grade-badge');
+    badge.style.background = color + '18';
+    badge.style.borderColor = color;
+    badge.style.color = color;
+
+    document.getElementById('grade-num').textContent = isDR ? 'DR' : 'OK';
+    document.getElementById('grade-name').textContent = r.prediction;
+    document.getElementById('grade-name').style.color = color;
+    document.getElementById('grade-severity').textContent = isDR ? 'Diabetic Retinopathy Detected' : 'Normal Eye';
+    document.getElementById('grade-desc').textContent = isDR
+      ? 'Signs of diabetic retinopathy detected. Please consult an ophthalmologist.'
+      : 'No signs of diabetic retinopathy detected.';
+
+    document.getElementById('dr-prob-val').textContent = r.dr_probability + '%';
+    document.getElementById('nodr-prob-val').textContent = (100 - r.dr_probability) + '%';
+
+    setTimeout(() => {
+      document.getElementById('dr-prob-bar').style.width = r.dr_probability + '%';
+      document.getElementById('nodr-prob-bar').style.width = (100 - r.dr_probability) + '%';
+    }, 100);
+
+    document.getElementById('rec-text').innerHTML = isDR
+      ? `<strong>Signs of diabetic retinopathy detected.</strong>
+         <ul style="margin-top:8px; padding-left:18px;">
+           <li>Consult an ophthalmologist for further evaluation.</li>
+           <li>Schedule a comprehensive retinal examination.</li>
+           <li>Maintain strict control of blood sugar, blood pressure, and cholesterol.</li>
+         </ul>`
+      : `<strong>No signs of diabetic retinopathy detected.</strong>
+         <ul style="margin-top:8px; padding-left:18px;">
+           <li>Maintain routine eye examinations (every 12 months).</li>
+           <li>Keep blood sugar levels under control.</li>
+           <li>Seek medical advice if any vision changes occur.</li>
+         </ul>`;
+
+    document.getElementById('single-results').classList.add('show');
+  }
+
+  /* ── BATCH RESULT RENDER ── */
+  function renderBatchResults(results) {
+    const batchEl = document.getElementById('batch-results');
+    const grid = document.getElementById('batch-grid');
+    grid.innerHTML = '';
+
+    let drCount = 0, okCount = 0;
+
+    results.forEach(({ file, data, idx }, i) => {
+      const card = document.createElement('div');
+
+      if (!data.success) {
+        card.className = 'img-result-card';
+        card.innerHTML = `
+          <div class="img-result-top">
+            <div class="img-result-num">${String(i + 1).padStart(2, '0')}</div>
+            <div class="img-result-meta">
+              <div class="img-result-filename">${file.name}</div>
+              <span class="img-result-badge" style="background:rgba(239,68,68,0.12);color:var(--red);border:1px solid rgba(239,68,68,0.25);">⚠ ERROR</span>
+            </div>
+          </div>
+          <div class="img-rec-box" style="color:#fca5a5;">${data.error || 'Analysis failed.'}</div>`;
+        grid.appendChild(card);
+        return;
+      }
+
+      const isDR = data.prediction === 'Diabetic Retinopathy';
+      isDR ? drCount++ : okCount++;
+
+      const color = isDR ? '#ef4444' : '#22c55e';
+      const barDR  = `background: linear-gradient(90deg, var(--accent), #a78bfa)`;
+      const barOK  = `background: linear-gradient(90deg, var(--green), #34d399)`;
+      const drPct  = data.dr_probability;
+      const okPct  = 100 - drPct;
+      const barId  = `br-${idx}`;
+
+      card.className = `img-result-card ${isDR ? 'is-dr' : 'is-ok'}`;
+
+      // Build thumbnail src from FileReader (async, fill after)
+      const thumbId = `thumb-${idx}`;
+
+      card.innerHTML = `
+        <div class="img-result-top">
+          <img class="img-result-thumb" id="${thumbId}" alt="${file.name}">
+          <div class="img-result-meta">
+            <div class="img-result-filename" title="${file.name}">${file.name}</div>
+            <span class="img-result-badge ${isDR ? 'dr' : 'ok'}">${isDR ? '🔴 DR DETECTED' : '🟢 NORMAL EYE'}</span>
+          </div>
+          <div class="img-result-num" style="color:${color}; font-size:0.75rem; text-align:right; flex-shrink:0;">#${String(i+1).padStart(2,'0')}</div>
+        </div>
+
+        <div class="img-prob-section">
+          <div class="img-prob-row">
+            <span class="img-prob-label">DR Probability</span>
+            <span class="img-prob-value" style="color:var(--red)">${drPct}%</span>
+          </div>
+          <div class="img-prob-bar-bg">
+            <div class="img-prob-bar-fill" id="${barId}-dr" style="${barDR};"></div>
+          </div>
+          <div class="img-prob-row">
+            <span class="img-prob-label">No DR Probability</span>
+            <span class="img-prob-value" style="color:var(--green)">${okPct}%</span>
+          </div>
+          <div class="img-prob-bar-bg">
+            <div class="img-prob-bar-fill" id="${barId}-ok" style="${barOK};"></div>
+          </div>
+        </div>
+
+        <div class="img-rec-box">
+          ${isDR
+            ? `<strong style="color:var(--red);">Signs of DR detected.</strong> Consult an ophthalmologist for further evaluation and schedule a comprehensive retinal examination.`
+            : `<strong style="color:var(--green);">No signs of DR detected.</strong> Maintain routine eye exams every 12 months and keep blood sugar levels controlled.`}
+        </div>`;
+
+      grid.appendChild(card);
+
+      // Set thumbnail
+      const reader = new FileReader();
+      reader.onload = e => {
+        const el = document.getElementById(thumbId);
+        if (el) el.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+
+      // Animate probability bars after a tick
+      setTimeout(() => {
+        const elDR = document.getElementById(`${barId}-dr`);
+        const elOK = document.getElementById(`${barId}-ok`);
+        if (elDR) elDR.style.width = drPct + '%';
+        if (elOK) elOK.style.width = okPct + '%';
+      }, 100 + i * 60);
+    });
+
+    document.getElementById('batch-dr-pill').textContent = `${drCount} DR`;
+    document.getElementById('batch-ok-pill').textContent = `${okCount} Normal`;
+    batchEl.classList.add('show');
+  }
+
+  function hideBatchResults() {
+    document.getElementById('batch-results').classList.remove('show');
+  }
+
+  function hideSingleResults() {
+    document.getElementById('single-results').classList.remove('show');
+  }
+
+  function showError(msg) {
+    const box = document.getElementById('error-box');
+    box.textContent = '⚠ ' + msg;
+    box.classList.add('show');
+  }
+
+  function hideError() {
+    document.getElementById('error-box').classList.remove('show');
+  }
+</script>
+<!-- Algorithm dropdown — rendered at body level to avoid overflow clipping -->
+<div class="algo-dropdown" id="algo-dropdown">
+  <div class="algo-dropdown-title">Choose Algorithm</div>
+
+  <div class="algo-card" id="algocard-resnet18" onclick="selectAlgo('resnet18')">
+    <div class="algo-card-icon">🔵</div>
+    <div class="algo-card-body">
+      <div class="algo-card-name">ResNet-18</div>
+      <div class="algo-card-desc">Fast, lightweight residual network. 18 layers, ~11M params. Great for quick screening.</div>
+      <div class="algo-card-tags">
+        <span class="algo-tag">11M params</span>
+        <span class="algo-tag">Fast</span>
+        <span class="algo-tag">Residual</span>
+      </div>
+    </div>
+    <div class="algo-card-check" id="check-resnet18">✓</div>
+  </div>
+
+  <div class="algo-card" id="algocard-efficientnet_b0" onclick="selectAlgo('efficientnet_b0')">
+    <div class="algo-card-icon">🟣</div>
+    <div class="algo-card-body">
+      <div class="algo-card-name">EfficientNet-B0</div>
+      <div class="algo-card-desc">Compound-scaled efficient network. ~5.3M params. Higher accuracy with less compute.</div>
+      <div class="algo-card-tags">
+        <span class="algo-tag">5.3M params</span>
+        <span class="algo-tag">Efficient</span>
+        <span class="algo-tag">Accurate</span>
+      </div>
+    </div>
+    <div class="algo-card-check" id="check-efficientnet_b0" style="opacity:0;">✓</div>
+  </div>
+</div>
+
+</body>
+</html>
